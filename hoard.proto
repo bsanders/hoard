@@ -1,0 +1,73 @@
+syntax = "proto2";
+// proto3, not even once.
+
+package hoard;
+
+// services can't return or accept "primitives"
+// so have to create these "shell" messages
+message ItemId {
+  required int32 id_num = 1;
+}
+
+message Name {
+  required string name = 1;
+}
+
+message Owner {
+  required string owner = 1;
+}
+
+// services also must have exactly one parameter
+// and exactly one return value
+message ItemIdLookup {
+  required string campaign_name = 1;
+  required int32 inventory_number = 2;
+}
+
+message ItemNameLookup {
+  required string campaign_name = 1;
+  required string item_name = 2;
+}
+
+message ItemOwnerLookup {
+  required string campaign_name = 1;
+  required string item_owner = 2;
+}
+
+message CampaignItem {
+  required string campaign_name = 1;
+  required Item item = 2;
+}
+
+// actual basic data entity
+// keep primitives primitive!
+message Item {
+  required int32 inventory_number = 1;
+  required string name = 2;
+  required string description = 3;
+  required string source = 4;
+  optional string owner = 5;
+
+  // messages can be defined nested
+  message Ability {
+    required string function = 1;
+    required bool identified = 2 [default = false];
+    optional string url = 3;
+  }
+
+  repeated Ability abilities = 7;
+}
+
+message Hoard {
+  required Name campaign = 1;
+  repeated Item items = 2;
+}
+
+service HoardLister {
+  rpc GetItemById(ItemIdLookup) returns (Item) {}
+  rpc GetItemByName(ItemNameLookup) returns (Item) {}
+  rpc ListItems(Name) returns (stream Item) {}
+  rpc ListItemsByOwner(ItemOwnerLookup) returns (stream Item) {}
+  rpc RecordItem(stream CampaignItem) returns (Item) {}
+}
+
